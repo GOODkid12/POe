@@ -1,11 +1,21 @@
+import javax.swing.*;
 import java.util.*;
-import javax.swing.JOptionPane;
+import java.util.List;
+import java.util.regex.*;
 
 public class Main {
 
-    static Map<String, String> users = new HashMap<String, String>();
+    static Map<String, String> users = new HashMap<>();
+    // these arrayList store the taskID, the tasksName, developers, tasks duration and taskStatus
+    private static List<String> taskIDList = new ArrayList<>();
+    private static List<String> taskNameList = new ArrayList<>();
+    private static List<String> developerList = new ArrayList<>();
+    private static List<Integer> taskDurationList = new ArrayList<>();
+    private static List<String> taskStatusList = new ArrayList<>();
+    public static int totalHours = 0;
 
     public static void main(String[] args) {
+        // part 1
         Scanner sc = new Scanner(System.in);
         int choice = 0;
         while (choice != 3) {
@@ -16,9 +26,12 @@ public class Main {
                     registerUser(sc);
                     break;
                 case 2:
-                    loginUser(sc);
+                    if (loginUser(sc)) {
+                        taskManager();
+                    }
                     break;
                 case 3:
+                    System.exit(0);
                     break;
                 default:
                     System.out.println("Invalid Choice.");
@@ -27,133 +40,222 @@ public class Main {
         sc.close();
     }
 
-    // user input for registration
+    // part 1
     static void registerUser(Scanner sc) {
-        String user = JOptionPane.showInputDialog("create a username: ");
-        String password = JOptionPane.showInputDialog("create a password: ");
+        String user;
+        while (true) {
+            user = JOptionPane.showInputDialog("Create a Username: ");
+            if (checkUsername(user)) {
+                JOptionPane.showMessageDialog(null, "Username successfully captured");
+                break;
+            } else {
+                JOptionPane.showMessageDialog(null, "Username is not correctly formatted, please ensure that your username contains an underscore and is no more than 5 characters in length.");
+            }
+        }
+        String password;
+        while (true) {
+            password = JOptionPane.showInputDialog("Create a password: ");
+            if (checkPassword(password)) {
+                JOptionPane.showMessageDialog(null, "Password successfully captured");
+                break;
+            } else {
+                JOptionPane.showMessageDialog(null, "Password is not correctly formatted, please ensure that the password contains at least 8 characters, an uppercase letter, a lowercase letter, and a number.");
+            }
+        }
+
         String name = JOptionPane.showInputDialog("Enter name:");
-        String surname = JOptionPane.showInputDialog("Enter surname: ");
+        String surname = JOptionPane.showInputDialog("Enter surname:");
+
         if (users.containsKey(user)) {
-            System.out.println("User already exists.");
+            JOptionPane.showMessageDialog(null, "User already exists.");
         } else {
             users.put(user, password);
-            System.out.println("Registration Successful.");
-        }
-        // if password meet checkUsername and checkPassword then displays the following
-        if (checkUsername(user)) {
-            JOptionPane.showMessageDialog(null, "Username successfully captured");
-        } else {
-            JOptionPane.showMessageDialog(null, "Username must be at least 5 characters long and contain '_' character");
-        }
-        if (checkPassword(password)) {
-            JOptionPane.showMessageDialog(null, "password successfully captured");
-        } else {
-            JOptionPane.showMessageDialog(null, "password is not correctly formatted, please ensure that the password contains at least 8 characters, a capital letter, a number and a special character");
+            JOptionPane.showMessageDialog(null, "Registration Successful.");
         }
     }
 
-    static void loginUser(Scanner sc) {
+    static boolean loginUser(Scanner sc) {
         String user = JOptionPane.showInputDialog("Enter your username: ");
         String password = JOptionPane.showInputDialog("Enter your password: ");
-        if (!users.containsKey(user)) {
-            System.out.println("Invalid username or password.");
+        if (!users.containsKey(user) || !users.get(user).equals(password)) {
+            JOptionPane.showMessageDialog(null, "Invalid username or password.");
         } else {
-            if (users.get(user).equals(password)) {
-                System.out.println("Login Successful.");
-                JOptionPane.showMessageDialog(null, "Welcome to easy kanban!!");
-                JOptionPane.showMessageDialog(null, "Welcome " + user + " , it is great to see you again.");
-                int choice = 0;
-                while (choice != 3) {
-                    String input = JOptionPane.showInputDialog(null, "1. Add Task\n2. Show report\n3. Quit");
-                    choice = Integer.parseInt(input);
-                    switch (choice) {
-                        case 1:
-                            addTask(user);
-                            break;
-                        case 2:
-                            showReport();
-                            break;
-                        case 3:
-                            break;
-                        default:
-                            System.out.println("Invalid choice.");
+            JOptionPane.showMessageDialog(null, "Welcome " + user + ", it is great to see you again.");
+        }
+        return true;
+    }
 
-                    }
+        public static boolean checkUsername (String username){
+            return username.length() <= 5 && username.contains("_");
+        }
+
+        public static boolean checkPassword (String password){
+            return Pattern.matches("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).{8,10}$", password);
+        }
+        static void taskManager () {
+            // part 3
+            while (true) {
+                String[] options = {"Add Task", "Show Report", "Search Task Name", "Search Developer", "Delete Task", "Quit"};
+                int choose = JOptionPane.showOptionDialog(null, "Menu", "Task Manager",
+                        JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+
+                switch (choose) {
+                    case 0:
+                        addTask();
+                        break;
+                    case 1:
+                        showReport();
+                        break;
+                    case 2:
+                        searchTaskName();
+                        break;
+                    case 3:
+                        searchDeveloper();
+                        break;
+                    case 4:
+                        deleteTask();
+                        break;
+                    case 5:
+                        return;
+                    default:
+                        JOptionPane.showMessageDialog(null, "Invalid Choice.");
                 }
+            }
+        }
+// part 2
+        static void addTask () {
+            String enterTaskCount = JOptionPane.showInputDialog("How many tasks would you like to input?");
+            int taskCount = Integer.parseInt(enterTaskCount);
+
+            for (int i = 0; i < taskCount; i++) {
+                JOptionPane.showMessageDialog(null, "Task " + (i + 1));
+                String taskName = JOptionPane.showInputDialog("Enter task name: ");
+                String taskDescription;
+                do {
+                    taskDescription = JOptionPane.showInputDialog("Enter task description (max 50 characters):");
+                } while (!checkTaskDescription(taskDescription));
+
+                String firstName = JOptionPane.showInputDialog("Enter developer first name: ");
+                String surname = JOptionPane.showInputDialog("Enter developer surname: ");
+                String developer = firstName + " " + surname;
+
+                String taskID = createTaskID(taskName, i, firstName, surname);
+                taskIDList.add(taskID);
+                taskNameList.add(taskName);
+                developerList.add(developer);
+
+                String inputTaskDuration = JOptionPane.showInputDialog("Enter task duration in hours: ");
+                int taskDuration = Integer.parseInt(inputTaskDuration);
+                taskDurationList.add(taskDuration);
+                totalHours += taskDuration;
+
+                String taskStatus = chooseTaskStatus();
+                taskStatusList.add(taskStatus);
+
+                printTaskDetails(taskStatus, developer, i, taskName, taskDescription, taskID, taskDuration);
+            }
+        }
+
+        private static boolean checkTaskDescription (String description){
+            if (description.length() > 50) {
+                JOptionPane.showMessageDialog(null, "Enter a task description with less than 50 characters.");
+                return false;
             } else {
-                System.out.println("Username or password incorrect, please try again.");
+                JOptionPane.showMessageDialog(null, "Task successfully captured.");
+                return true;
             }
         }
-    }
 
-    // Check if the username meets conditions
-    public static boolean checkUsername(String username) {
-        return username.length() >= 5 && username.contains("_");
-    }
+        private static String createTaskID (String taskName,int taskNumber, String firstName, String surname){
+            String firstTwoLetters = taskName.substring(0, 2).toUpperCase();
+            String lastThreeLetters = surname.substring(0, Math.min(surname.length(), 3)).toUpperCase();
+            return firstTwoLetters + ":" + taskNumber + ":" + lastThreeLetters;
+        }
 
-    // Check if the password meets conditions
-    public static boolean checkPassword(String password) {
-        if (password.length() >= 8 && password.length() <= 10) {
-            // Check if the password has special characters
-            String specialCharacters = "!@#$%^&*()-_+=~`[]{}|\\:;\"'<>,.?/";
-            for (int i = 0; i < password.length(); i++) {
-                char c = password.charAt(i);
-                if (specialCharacters.contains(String.valueOf(c))) {
-                    return true;
+        public static String chooseTaskStatus () {
+            String[] statuses = {"To do", "Doing", "Done"};
+            while (true) {
+                int statusChoice = JOptionPane.showOptionDialog(null, "Select task status:", "Task Status", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, statuses, statuses[0]);
+                switch (statusChoice) {
+                    case 0:
+                        return "To do";
+                    case 1:
+                        return "Doing";
+                    case 2:
+                        return "Done";
+                    default:
+                        JOptionPane.showMessageDialog(null, "Invalid option, try again.");
                 }
             }
         }
-        return false;
-    }
 
-    static void addTask(String user) {
-        String taskName = JOptionPane.showInputDialog("Enter task name ");
-        String taskDescription;
-        do {
-            taskDescription = JOptionPane.showInputDialog("Enter the task Description: ");
-            if (taskDescription.length() > 50) {
-                JOptionPane.showMessageDialog(null, "Please enter a Task Description of less than 50 characters");
+        static void showReport () {
+            StringBuilder report = new StringBuilder("REPORT OF ALL CAPTURED TASKS:\n");
+
+            for (int i = 0; i < taskIDList.size(); i++) {
+                report.append("Task ID: ").append(taskIDList.get(i)).append("\n")
+                        .append("Task Name: ").append(taskNameList.get(i)).append("\n")
+                        .append("Developer: ").append(developerList.get(i)).append("\n")
+                        .append("Duration: ").append(taskDurationList.get(i)).append("\n")
+                        .append("Status: ").append(taskStatusList.get(i)).append("\n\n");
             }
-        } while (taskDescription.length() > 50);
 
-        JOptionPane.showMessageDialog(null, "Task successfully captured");
-
-        //entering basic information
-        String firstName = JOptionPane.showInputDialog("Enter developer name: ");
-        String sSurname = JOptionPane.showInputDialog("Enter developer surname: ");
-        // this is an array that allows you to choose between the 3
-        Scanner scanner = new Scanner(System.in);
-
-        String[] statuses = {"To do", "Doing", "Done"};
-        statuses[0] = "To do";
-        statuses[1] = "Doing";
-        statuses[2] = "Done";
-        System.out.println(Arrays.toString(statuses));
-        System.out.println("Task added");
-        // Display a dialog box with the statuses array as options
-        int statusChoice = JOptionPane.showOptionDialog(null, "Select task status:", "Task Status", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, statuses, statuses[0]);
-
-        // Check if the user made a selection
-        if (statusChoice != JOptionPane.CLOSED_OPTION) {
-            String selectedStatus = statuses[statusChoice];
-            System.out.println("Task added with status: " + selectedStatus);
-            // Here you can further process the task with the selected status
-        } else {
-            System.out.println("Task addition cancelled.");
+            JOptionPane.showMessageDialog(null, report.toString());
         }
-        StringBuilder displayMenu = new StringBuilder();
-        displayMenu.append("Task name: ").append(taskName);
-        displayMenu.append("Description: ").append(taskDescription);
-        displayMenu.append("Developer name & Surname").append(firstName).append(sSurname);
-        displayMenu.append("Status: ").append(statusChoice);
 
-        JOptionPane.showMessageDialog(null, displayMenu.toString(), "Task Information", JOptionPane.INFORMATION_MESSAGE);
+        private static void printTaskDetails (String taskStatus, String developer,int taskNumber, String
+        taskName, String taskDescription, String taskID,int taskDuration){
+            String taskDetails = "Task Status: " + taskStatus + "\n"
+                    + "Developer: " + developer + "\n"
+                    + "Task Number: " + taskNumber + "\n"
+                    + "Task Name: " + taskName + "\n"
+                    + "Task Description: " + taskDescription + "\n"
+                    + "Task ID: " + taskID + "\n"
+                    + "Task Duration: " + taskDuration + " hours\n";
+            JOptionPane.showMessageDialog(null, taskDetails);
+        }
 
+        public static void searchTaskName () {
+            String inputTaskName = JOptionPane.showInputDialog("Enter Task Name.");
+            int taskIndex = taskNameList.indexOf(inputTaskName);
+            if (taskIndex != -1) {
+                String taskDetails = "Task Status: " + taskStatusList.get(taskIndex) + "\n"
+                        + "Developer: " + developerList.get(taskIndex) + "\n"
+                        + "Task Name: " + taskNameList.get(taskIndex) + "\n"
+                        + "Task ID: " + taskIDList.get(taskIndex) + "\n"
+                        + "Task Duration: " + taskDurationList.get(taskIndex) + " hours\n";
+                JOptionPane.showMessageDialog(null, taskDetails);
+            } else {
+                JOptionPane.showMessageDialog(null, "Task not Found.");
+            }
+        }
+
+        public static void searchDeveloper () {
+            String Developer = JOptionPane.showInputDialog("Search by developer name");
+            String report = "Task assigned to " + Developer + ":\n";
+
+            for (int i = 0; i < developerList.size(); i++) {
+                if (developerList.get(i).equalsIgnoreCase(Developer)) {
+                    report += "-Task Name:" + taskNameList.get(i) + ", Status: " + taskStatusList.get(i) + "\n";
+
+                }
+            }
+            JOptionPane.showMessageDialog(null, report);
+        }
+
+        public static void deleteTask () {
+            String taskName = JOptionPane.showInputDialog(null, "Enter task name to delete.");
+            int taskIndex = taskNameList.indexOf(taskName);
+            if (taskIndex != -1) {
+                developerList.remove(taskIndex);
+                taskNameList.remove(taskIndex);
+                taskIDList.remove(taskIndex);
+                taskDurationList.remove(taskIndex);
+                taskStatusList.remove(taskIndex);
+                JOptionPane.showMessageDialog(null, "Task deleted successfully.");
+            } else {
+                JOptionPane.showMessageDialog(null, "Task not found");
+
+            }
+        }
     }
-
-
-    static void showReport() {
-    JOptionPane.showMessageDialog(null,"Coming soon.");
-    }
-}
-
